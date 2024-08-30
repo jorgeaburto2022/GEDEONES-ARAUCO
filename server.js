@@ -8,12 +8,14 @@ const { Sequelize, DataTypes } = require('sequelize');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+
 // Configuración de CORS para permitir solicitudes desde tu frontend
 app.use(cors({
-    origin: 'https://gedeones-arauco.vercel.app/api/pagos', // Reemplaza con la URL de tu frontend
+    origin: 'https://gedeones-arauco.vercel.app', // Reemplaza con la URL de tu frontend
 }));
-app.use(bodyParser.json());
 
+
+app.use(bodyParser.json());
 // Configuración de Sequelize para PostgreSQL usando tus credenciales
 const sequelize = new Sequelize('tesoreria', 'miusuario', '1234', {
     host: 'localhost', // Cambia a la URL de tu servidor PostgreSQL si no es local
