@@ -8,26 +8,25 @@ const { Sequelize, DataTypes } = require('sequelize');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-
 // Configuración de CORS para permitir solicitudes desde tu frontend
 app.use(cors({
     origin: 'https://gedeones-arauco.vercel.app', // Reemplaza con la URL de tu frontend
 }));
 
-
 app.use(bodyParser.json());
+
 // Configuración de Sequelize para PostgreSQL usando tus credenciales
 const sequelize = new Sequelize('tesoreria', 'miusuario', '1234', {
     host: 'localhost', // Cambia a la URL de tu servidor PostgreSQL si no es local
     dialect: 'postgres',
     port: 5432, // Puerto por defecto de PostgreSQL, ajusta si es diferente
     dialectOptions: {
-        ssl: process.env.NODE_ENV === 'production' ? { // Usar SSL en producción si es necesario
+        ssl: process.env.NODE_ENV === 'production' ? {
             require: true,
-            rejectUnauthorized: false // Puede ser necesario si usas un certificado autofirmado
+            rejectUnauthorized: false
         } : false,
     },
-    logging: false, // Deshabilitar el logging de Sequelize, cambiar a true para depuración
+    logging: false, 
 });
 
 // Verificar la conexión a la base de datos
@@ -90,7 +89,8 @@ app.post('/api/register', async (req, res) => {
         const user = await User.create({ username, password: hashedPassword });
         res.status(201).json({ message: 'Usuario registrado exitosamente' });
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        console.error('Error al registrar usuario:', error.message);
+        res.status(400).json({ message: 'Error al registrar usuario: ' + error.message });
     }
 });
 
@@ -106,7 +106,8 @@ app.post('/api/login', async (req, res) => {
             res.status(401).json({ message: 'Credenciales incorrectas' });
         }
     } catch (error) {
-        res.status(500).json({ message: 'Error en el servidor' });
+        console.error('Error en el inicio de sesión:', error.message);
+        res.status(500).json({ message: 'Error en el servidor: ' + error.message });
     }
 });
 
@@ -117,7 +118,8 @@ app.post('/api/pagos', async (req, res) => {
         const pago = await Pago.create({ mes, nombre, fondoBernabe, fondoEscritura, obraPersonal, total });
         res.status(201).json(pago);
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        console.error('Error al guardar el pago:', error.message);
+        res.status(400).json({ message: 'Error al guardar el pago: ' + error.message });
     }
 });
 
@@ -127,7 +129,8 @@ app.get('/api/pagos', async (req, res) => {
         const pagos = await Pago.findAll();
         res.json(pagos);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('Error al obtener pagos:', error.message);
+        res.status(500).json({ message: 'Error al obtener pagos: ' + error.message });
     }
 });
 
@@ -138,7 +141,8 @@ app.delete('/api/pagos', async (req, res) => {
         await Pago.destroy({ where: { mes, nombre } });
         res.status(200).json({ message: 'Pago eliminado correctamente' });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('Error al eliminar el pago:', error.message);
+        res.status(500).json({ message: 'Error al eliminar el pago: ' + error.message });
     }
 });
 
