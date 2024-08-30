@@ -6,15 +6,19 @@ const bcrypt = require('bcryptjs');
 const { Sequelize, DataTypes } = require('sequelize');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 app.use(cors());
 app.use(bodyParser.json());
 
-// Configuración de Sequelize para PostgreSQL
+// Configuración de Sequelize para PostgreSQL usando tus credenciales
 const sequelize = new Sequelize('tesoreria', 'miusuario', '1234', {
-    host: 'localhost',  // o el host donde está PostgreSQL
+    host: 'localhost', // Cambia a la URL de tu servidor PostgreSQL si no es local
     dialect: 'postgres',
+    port: 5432, // Puerto por defecto de PostgreSQL, ajusta si es diferente
+    dialectOptions: {
+        ssl: false, // Cambia a 'true' si tu base de datos requiere SSL
+    },
 });
 
 // Definir modelos de datos usando Sequelize
@@ -22,39 +26,39 @@ const User = sequelize.define('User', {
     username: {
         type: DataTypes.STRING,
         allowNull: false,
-        unique: true
+        unique: true,
     },
     password: {
         type: DataTypes.STRING,
-        allowNull: false
-    }
+        allowNull: false,
+    },
 });
 
 const Pago = sequelize.define('Pago', {
     mes: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: false,
     },
     nombre: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: false,
     },
     fondoBernabe: {
         type: DataTypes.FLOAT,
-        allowNull: false
+        allowNull: false,
     },
     fondoEscritura: {
         type: DataTypes.FLOAT,
-        allowNull: false
+        allowNull: false,
     },
     obraPersonal: {
         type: DataTypes.FLOAT,
-        allowNull: false
+        allowNull: false,
     },
     total: {
         type: DataTypes.FLOAT,
-        allowNull: false
-    }
+        allowNull: false,
+    },
 });
 
 // Sincronizar modelos con la base de datos
@@ -78,7 +82,7 @@ app.post('/api/register', async (req, res) => {
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
     const user = await User.findOne({ where: { username } });
-    if (user && await bcrypt.compare(password, user.password)) {
+    if (user && (await bcrypt.compare(password, user.password))) {
         const token = jwt.sign({ id: user.id }, 'secretkey', { expiresIn: '1h' });
         res.json({ token });
     } else {
