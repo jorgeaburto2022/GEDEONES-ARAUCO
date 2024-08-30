@@ -6,7 +6,7 @@ const bcrypt = require('bcryptjs');
 const { Sequelize, DataTypes } = require('sequelize');
 
 const app = express();
-const PORT = process.env.PORT || 5006;
+const PORT = process.env.PORT || 5000;
 
 // Configuración de CORS para permitir solicitudes desde tu frontend
 app.use(cors({
