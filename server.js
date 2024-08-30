@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 5000;
 
 // Configuración de CORS para permitir solicitudes desde tu frontend
 app.use(cors({
-    origin: 'https://gedeones-arauco.vercel.app', // Reemplaza con la URL de tu frontend
+    origin: 'https://gedeones-arauco.vercel.app/api/pagos', // Reemplaza con la URL de tu frontend
 }));
 app.use(bodyParser.json());
 
