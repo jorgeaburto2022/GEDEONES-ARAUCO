@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tesorería - Control de Tesorería 2024-2025</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
+    <style>
+        .navbar-custom {
+            background-color: #343a40;
+        }
+
+        .navbar-custom .navbar-brand,
+        .navbar-custom .nav-link {
+            color: #ffffff;
+        }
+
+        .month-section {
+            margin-bottom: 40px;
+        }
+
+        .month-header {
+            background-color: #343a40;
+            color: white;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+
+        .table {
+            margin-bottom: 30px;
+        }
+
+        .totals {
+            font-weight: bold;
+            background-color: #f1f1f1;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">Inicio</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="tesoreria.html">Tesorería</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="actividades.html">Actividades</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenido de Control de Tesorería -->
+    <div class="container my-5">
+        <h2 class="text-center mb-4">Control de Tesorería 2024-2025</h2>
+        <!-- Botón para exportar a PDF -->
+        <div class="text-end mb-3">
+            <button class="btn btn-primary" id="exportPDF">Exportar a PDF</button>
+        </div>
+
+        <!-- Secciones de Meses Generadas Dinámicamente -->
+        <div id="meses-container">
+            <!-- Aquí se insertarán las tablas de cada mes dinámicamente -->
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const apiUrl = 'http://localhost:5000/api/pagos';  // Asegúrate de usar la URL correcta de tu backend
+
+        // Lista de nombres para cada mes
+        const nombres = ["Carlos Espinoza", "Abdiel", "Carlos Amigo", "Esteban", "Jorge", "Juan", "Orfilia", "Pradelia", "Daniela"];
+
+        // Lista de meses
+        const meses = ['junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre', 'enero', 'febrero', 'marzo', 'abril', 'mayo'];
+
+        // Función para crear tablas dinámicamente para cada mes
+        function crearTablasMeses() {
+            const container = document.getElementById('meses-container');
+            meses.forEach(mes => {
+                const monthSection = document.createElement('div');
+                monthSection.className = 'month-section';
+                monthSection.innerHTML = `
+                    <h3 class="month-header">${mes.charAt(0).toUpperCase() + mes.slice(1)} 2024</h3>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Fondo Bernabé</th>
+                                <th>Fondo de Escritura</th>
+                                <th>Obra Personal</th>
+                                <th>Total</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-${mes}">
+                            <!-- Aquí se generarán dinámicamente los nombres de los participantes -->
+                        </tbody>
+                    </table>
+                `;
+                container.appendChild(monthSection);
+                generarFilas(mes);
+            });
+        }
+
+        // Función para generar filas con nombres y campos de pago para cada mes
+        function generarFilas(mes) {
+            const tbody = document.getElementById(`tbody-${mes}`);
+            nombres.forEach(nombre => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${nombre}</td>
+                    <td><input type="text" class="form-control" oninput="calcularTotal(this)"></td>
+                    <td><input type="text" class="form-control" oninput="calcularTotal(this)"></td>
+                    <td><input type="text" class="form-control" oninput="calcularTotal(this)"></td>
+                    <td><input type="text" class="form-control" readonly></td>
+                    <td>
+                        <button class="btn btn-success" onclick="guardarPago(this, '${mes}', '${nombre}')">Guardar</button>
+                        <button class="btn btn-danger" onclick="eliminarPago('${mes}', '${nombre}')">Eliminar</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Función para cargar los datos guardados desde el servidor
+        async function cargarDatos() {
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (!response.ok) throw new Error('Error al cargar datos: ' + response.statusText);
+                const datos = await response.json();
+                datos.forEach(pago => {
+                    const tbody = document.getElementById(`tbody-${pago.mes}`);
+                    if (tbody) {
+                        const row = Array.from(tbody.children).find(r => r.children[0].textContent === pago.nombre);
+                        if (row) {
+                            row.children[1].querySelector('input').value = pago.fondoBernabe;
+                            row.children[2].querySelector('input').value = pago.fondoEscritura;
+                            row.children[3].querySelector('input').value = pago.obraPersonal;
+                            row.children[4].querySelector('input').value = calcularTotal(row.children[1].querySelector('input'), row.children[2].querySelector('input'), row.children[3].querySelector('input'));
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Error al cargar los datos:', error);
+                alert('Error al cargar los datos. Por favor, intenta nuevamente.');
+            }
+        }
+
+        // Función para guardar un pago
+        async function guardarPago(button, mes, nombre) {
+            const row = button.closest('tr');
+            const fondoBernabe = parseFloat(row.children[1].querySelector('input').value) || 0;
+            const fondoEscritura = parseFloat(row.children[2].querySelector('input').value) || 0;
+            const obraPersonal = parseFloat(row.children[3].querySelector('input').value) || 0;
+            const total = fondoBernabe + fondoEscritura + obraPersonal;
+
+            const pago = { mes, nombre, fondoBernabe, fondoEscritura, obraPersonal, total };
+            const token = localStorage.getItem('token');
+
+            try {
+                const response = await fetch(`${apiUrl}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(pago)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    console.error('Error al guardar el pago:', error.message);
+                    alert(`Error: ${error.message}`);
+                } else {
+                    alert('Pago guardado correctamente');
+                }
+            } catch (error) {
+                console.error('Error de red:', error);
+                alert('Error de red. Verifica tu conexión.');
+            }
+        }
+
+        // Función para calcular el total de los pagos por fila
+        function calcularTotal(input) {
+            const row = input.closest('tr');
+            const fondoBernabe = parseFloat(row.children[1].querySelector('input').value) || 0;
+            const fondoEscritura = parseFloat(row.children[2].querySelector('input').value) || 0;
+            const obraPersonal = parseFloat(row.children[3].querySelector('input').value) || 0;
+            const total = fondoBernabe + fondoEscritura + obraPersonal;
+            row.children[4].querySelector('input').value = total.toFixed(2);
+            return total.toFixed(2);
+        }
+
+        // Función para eliminar un pago
+        async function eliminarPago(mes, nombre) {
+            try {
+                const response = await fetch(`${apiUrl}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ mes, nombre })
+                });
+                if (!response.ok) throw new Error('Error al eliminar pago: ' + response.statusText);
+                alert('Pago eliminado correctamente');
+                location.reload();
+            } catch (error) {
+                console.error('Error al eliminar el pago:', error);
+                alert('Error al eliminar el pago. Por favor, intenta nuevamente.');
+            }
+        }
+
+        // Cargar datos al cargar la página
+        crearTablasMeses();
+        cargarDatos();
+
+        // Función para exportar la tabla a PDF
+        document.getElementById('exportPDF').addEventListener('click', function () {
+            const element = document.querySelector('.container');
+            html2pdf().from(element).save('Control_de_Tesoreria_2024-2025.pdf');
+        });
+    </script>
+</body>
+
+</html>
