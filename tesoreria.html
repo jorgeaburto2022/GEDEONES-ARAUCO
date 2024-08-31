@@ -149,6 +149,41 @@
             });
         }
 
+        // Función para guardar un pago
+        async function guardarPago(button, mes, nombre) {
+            const row = button.closest('tr');
+            const fondoBernabe = parseFloat(row.children[1].querySelector('input').value) || 0;
+            const fondoEscritura = parseFloat(row.children[2].querySelector('input').value) || 0;
+            const obraPersonal = parseFloat(row.children[3].querySelector('input').value) || 0;
+            const total = fondoBernabe + fondoEscritura + obraPersonal;
+
+            const pago = { mes, nombre, fondoBernabe, fondoEscritura, obraPersonal, total };
+
+            const token = localStorage.getItem('token'); // Asumiendo que usas un token
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}` // Incluye el token si es necesario
+                    },
+                    body: JSON.stringify(pago)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    console.error('Error al guardar el pago:', error.message);
+                    alert(`Error: ${error.message}`);
+                } else {
+                    alert('Pago guardado correctamente');
+                }
+            } catch (error) {
+                console.error('Error de red:', error);
+                alert('Error de red. Verifica tu conexión.');
+            }
+        }
+
         // Función para calcular el total de los pagos por fila
         function calcularTotal(input, mes) {
             const row = input.closest('tr');
@@ -196,6 +231,7 @@
 </body>
 
 </html>
+
 
 
 
