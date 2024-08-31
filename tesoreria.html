@@ -108,16 +108,6 @@
                         <tbody id="tbody-${mes}">
                             <!-- Aquí se generarán dinámicamente los nombres de los participantes -->
                         </tbody>
-                        <tfoot>
-                            <tr class="totals">
-                                <td>Total del mes</td>
-                                <td id="totalBernabe-${mes}">0.00</td>
-                                <td id="totalEscritura-${mes}">0.00</td>
-                                <td id="totalObra-${mes}">0.00</td>
-                                <td id="totalMes-${mes}">0.00</td>
-                                <td></td>
-                            </tr>
-                        </tfoot>
                     </table>
                 `;
                 container.appendChild(monthSection);
@@ -132,9 +122,9 @@
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${nombre}</td>
-                    <td><input type="text" class="form-control" oninput="calcularTotal(this, '${mes}')"></td>
-                    <td><input type="text" class="form-control" oninput="calcularTotal(this, '${mes}')"></td>
-                    <td><input type="text" class="form-control" oninput="calcularTotal(this, '${mes}')"></td>
+                    <td><input type="text" class="form-control" oninput="calcularTotal(this)"></td>
+                    <td><input type="text" class="form-control" oninput="calcularTotal(this)"></td>
+                    <td><input type="text" class="form-control" oninput="calcularTotal(this)"></td>
                     <td><input type="text" class="form-control" readonly></td>
                     <td>
                         <button class="btn btn-success" onclick="guardarPago(this, '${mes}', '${nombre}')">Guardar</button>
@@ -143,39 +133,6 @@
                 `;
                 tbody.appendChild(row);
             });
-        }
-
-        // Función para calcular el total de los pagos por fila
-        function calcularTotal(input, mes) {
-            const row = input.closest('tr');
-            const fondoBernabe = parseFloat(row.children[1].querySelector('input').value) || 0;
-            const fondoEscritura = parseFloat(row.children[2].querySelector('input').value) || 0;
-            const obraPersonal = parseFloat(row.children[3].querySelector('input').value) || 0;
-            const total = fondoBernabe + fondoEscritura + obraPersonal;
-            row.children[4].querySelector('input').value = total.toFixed(2);
-
-            // Actualizar los totales del mes
-            actualizarTotalesMes(mes);
-
-            return total.toFixed(2);
-        }
-
-        // Función para actualizar los totales de cada columna por mes
-        function actualizarTotalesMes(mes) {
-            const tbody = document.getElementById(`tbody-${mes}`);
-            let totalBernabe = 0, totalEscritura = 0, totalObra = 0, totalMes = 0;
-
-            Array.from(tbody.children).forEach(row => {
-                totalBernabe += parseFloat(row.children[1].querySelector('input').value) || 0;
-                totalEscritura += parseFloat(row.children[2].querySelector('input').value) || 0;
-                totalObra += parseFloat(row.children[3].querySelector('input').value) || 0;
-                totalMes += parseFloat(row.children[4].querySelector('input').value) || 0;
-            });
-
-            document.getElementById(`totalBernabe-${mes}`).textContent = totalBernabe.toFixed(2);
-            document.getElementById(`totalEscritura-${mes}`).textContent = totalEscritura.toFixed(2);
-            document.getElementById(`totalObra-${mes}`).textContent = totalObra.toFixed(2);
-            document.getElementById(`totalMes-${mes}`).textContent = totalMes.toFixed(2);
         }
 
         // Función para cargar los datos guardados desde el servidor
@@ -197,11 +154,9 @@
                             row.children[1].querySelector('input').value = pago.fondoBernabe;
                             row.children[2].querySelector('input').value = pago.fondoEscritura;
                             row.children[3].querySelector('input').value = pago.obraPersonal;
-                            row.children[4].querySelector('input').value = calcularTotal(row.children[1].querySelector('input'), mes);
+                            row.children[4].querySelector('input').value = calcularTotal(row.children[1].querySelector('input'), row.children[2].querySelector('input'), row.children[3].querySelector('input'));
                         }
                     }
-                    // Actualizar totales después de cargar cada pago
-                    actualizarTotalesMes(pago.mes);
                 });
             } catch (error) {
                 console.error('Error al cargar los datos:', error);
@@ -243,6 +198,17 @@
             }
         }
 
+        // Función para calcular el total de los pagos por fila
+        function calcularTotal(input) {
+            const row = input.closest('tr');
+            const fondoBernabe = parseFloat(row.children[1].querySelector('input').value) || 0;
+            const fondoEscritura = parseFloat(row.children[2].querySelector('input').value) || 0;
+            const obraPersonal = parseFloat(row.children[3].querySelector('input').value) || 0;
+            const total = fondoBernabe + fondoEscritura + obraPersonal;
+            row.children[4].querySelector('input').value = total.toFixed(2);
+            return total.toFixed(2);
+        }
+
         // Función para eliminar un pago
         async function eliminarPago(mes, nombre) {
             try {
@@ -263,10 +229,8 @@
         }
 
         // Cargar datos al cargar la página
-        document.addEventListener('DOMContentLoaded', function () {
-            crearTablasMeses();
-            cargarDatos();
-        });
+        crearTablasMeses();
+        cargarDatos();
 
         // Función para exportar la tabla a PDF
         document.getElementById('exportPDF').addEventListener('click', function () {
@@ -277,3 +241,4 @@
 </body>
 
 </html>
+
