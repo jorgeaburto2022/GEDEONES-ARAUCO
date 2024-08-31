@@ -125,6 +125,9 @@
                 container.appendChild(monthSection);
                 generarFilas(mes);
             });
+
+            // Llama a cargarDatos después de crear las tablas
+            cargarDatos();
         }
 
         // Función para generar filas con nombres y campos de pago para cada mes
@@ -223,10 +226,39 @@
             html2pdf().from(element).save(`Control_de_Tesoreria_${mes}_2024.pdf`);
         }
 
-        // Cargar datos al cargar la página
-        crearTablasMeses();
-        cargarDatos();
+        // Función para cargar los datos guardados desde el servidor
+        async function cargarDatos() {
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (!response.ok) throw new Error('Error al cargar datos: ' + response.statusText);
+                const datos = await response.json();
+                datos.forEach(pago => {
+                    const tbody = document.getElementById(`tbody-${pago.mes}`);
+                    if (tbody) {
+                        const row = Array.from(tbody.children).find(r => r.children[0].textContent === pago.nombre);
+                        if (row) {
+                            row.children[1].querySelector('input').value = pago.fondoBernabe;
+                            row.children[2].querySelector('input').value = pago.fondoEscritura;
+                            row.children[3].querySelector('input').value = pago.obraPersonal;
+                            row.children[4].querySelector('input').value = calcularTotal(row.children[1].querySelector('input'), row.children[2].querySelector('input'), row.children[3].querySelector('input'));
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Error al cargar los datos:', error);
+                alert('Error al cargar los datos. Por favor, intenta nuevamente.');
+            }
+        }
 
+        // Cargar datos al cargar la página
+        document.addEventListener('DOMContentLoaded', function () {
+            crearTablasMeses();
+        });
     </script>
 </body>
 
