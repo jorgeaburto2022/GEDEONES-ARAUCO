@@ -45,7 +45,8 @@
     <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
         <div class="container">
             <a class="navbar-brand" href="index.html">Inicio</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
@@ -55,6 +56,10 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="actividades.html">Actividades</a>
+                    </li>
+                    <!-- Enlace para abrir la calculadora -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#calculadoraModal">Calculadora</a>
                     </li>
                 </ul>
             </div>
@@ -75,13 +80,48 @@
         </div>
     </div>
 
+    <!-- Modal de la Calculadora -->
+    <div class="modal fade" id="calculadoraModal" tabindex="-1" aria-labelledby="calculadoraModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="calculadoraModalLabel">Calculadora</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Formulario de la calculadora -->
+                    <form id="calculatorForm">
+                        <div class="mb-3">
+                            <input type="number" class="form-control" id="num1" placeholder="Número 1">
+                        </div>
+                        <div class="mb-3">
+                            <input type="number" class="form-control" id="num2" placeholder="Número 2">
+                        </div>
+                        <div class="mb-3">
+                            <select class="form-select" id="operation">
+                                <option value="add">Sumar</option>
+                                <option value="subtract">Restar</option>
+                                <option value="multiply">Multiplicar</option>
+                                <option value="divide">Dividir</option>
+                            </select>
+                        </div>
+                        <button type="button" class="btn btn-primary" onclick="calculate()">Calcular</button>
+                    </form>
+                    <div class="mt-3">
+                        <h6>Resultado: <span id="resultado"></span></h6>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const apiUrl = 'http://localhost:5000/api/pagos'; // Cambia a la URL de tu backend local
 
         // Lista de nombres para cada mes
-        const nombres = ["Carlos Espinoza", "Abdiel", "Carlos Amigo", "Esteban", "Jorge", "Juan", "Orfilia", "Pradelia", "Daniela", "TOTAL DE PAGO"];
+        const nombres = ["Carlos Espinoza", "Abdiel", "Carlos Amigo", "Esteban", "Jorge", "Juan", "Orfilia", "Pradelia", "Daniela", "TOTAL DEL MES"];
 
         // Lista de meses
         const meses = ['junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre', 'enero', 'febrero', 'marzo', 'abril', 'mayo'];
@@ -115,87 +155,24 @@
             });
         }
 
+        // Función para generar filas con nombres y campos de pago para cada mes
         function generarFilas(mes) {
-    const tbody = document.getElementById(`tbody-${mes}`);
-    nombres.forEach(nombre => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${nombre}</td>
-            <td><input type="text" class="form-control" oninput="calcularTotal(this)"></td>
-            <td><input type="text" class="form-control" oninput="calcularTotal(this)"></td>
-            <td><input type="text" class="form-control" oninput="calcularTotal(this)"></td>
-            <td><input type="text" class="form-control" readonly></td>
-            <td class="d-flex justify-content-between"> <!-- Añadido para alinear horizontalmente -->
-                <button class="btn btn-success me-1" onclick="guardarPago(this, '${mes}', '${nombre}')">Guardar</button>
-                <button class="btn btn-danger ms-1" onclick="eliminarPago('${mes}', '${nombre}')">Eliminar</button>
-            </td>
-        `;
-        tbody.appendChild(row);
-    });
-}
-
-
-        // Función para cargar los datos guardados desde el servidor
-        async function cargarDatos() {
-            try {
-                const response = await fetch(apiUrl, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-                if (!response.ok) throw new Error('Error al cargar datos: ' + response.statusText);
-                const datos = await response.json();
-                datos.forEach(pago => {
-                    const tbody = document.getElementById(`tbody-${pago.mes}`);
-                    if (tbody) {
-                        const row = Array.from(tbody.children).find(r => r.children[0].textContent === pago.nombre);
-                        if (row) {
-                            row.children[1].querySelector('input').value = pago.fondoBernabe;
-                            row.children[2].querySelector('input').value = pago.fondoEscritura;
-                            row.children[3].querySelector('input').value = pago.obraPersonal;
-                            row.children[4].querySelector('input').value = calcularTotal(row.children[1].querySelector('input'), row.children[2].querySelector('input'), row.children[3].querySelector('input'));
-                        }
-                    }
-                });
-            } catch (error) {
-                console.error('Error al cargar los datos:', error);
-                alert('Error al cargar los datos. Por favor, intenta nuevamente.');
-            }
-        }
-
-        // Función para guardar un pago
-        async function guardarPago(button, mes, nombre) {
-            const row = button.closest('tr');
-            const fondoBernabe = parseFloat(row.children[1].querySelector('input').value) || 0;
-            const fondoEscritura = parseFloat(row.children[2].querySelector('input').value) || 0;
-            const obraPersonal = parseFloat(row.children[3].querySelector('input').value) || 0;
-            const total = fondoBernabe + fondoEscritura + obraPersonal;
-
-            const pago = { mes, nombre, fondoBernabe, fondoEscritura, obraPersonal, total };
-            const token = localStorage.getItem('token');
-
-            try {
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify(pago)
-                });
-
-                if (!response.ok) {
-                    const error = await response.json();
-                    console.error('Error al guardar el pago:', error.message);
-                    alert(`Error: ${error.message}`);
-                } else {
-                    alert('Pago guardado correctamente');
-                }
-            } catch (error) {
-                console.error('Error de red:', error);
-                alert('Error de red. Verifica tu conexión.');
-            }
+            const tbody = document.getElementById(`tbody-${mes}`);
+            nombres.forEach(nombre => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${nombre}</td>
+                    <td><input type="text" class="form-control" oninput="calcularTotal(this)"></td>
+                    <td><input type="text" class="form-control" oninput="calcularTotal(this)"></td>
+                    <td><input type="text" class="form-control" oninput="calcularTotal(this)"></td>
+                    <td><input type="text" class="form-control" readonly></td>
+                    <td class="d-flex justify-content-between">
+                        <button class="btn btn-success me-1" onclick="guardarPago(this, '${mes}', '${nombre}')">Guardar</button>
+                        <button class="btn btn-danger ms-1" onclick="eliminarPago('${mes}', '${nombre}')">Eliminar</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
         }
 
         // Función para calcular el total de los pagos por fila
@@ -204,41 +181,67 @@
             const fondoBernabe = parseFloat(row.children[1].querySelector('input').value) || 0;
             const fondoEscritura = parseFloat(row.children[2].querySelector('input').value) || 0;
             const obraPersonal = parseFloat(row.children[3].querySelector('input').value) || 0;
+
+            // Verificar que los valores no sean negativos
+            if (fondoBernabe < 0 || fondoEscritura < 0 || obraPersonal < 0) {
+                alert('Los valores de pago no pueden ser negativos.');
+                input.value = ''; // Limpiar el campo si el valor es negativo
+                return;
+            }
+
             const total = fondoBernabe + fondoEscritura + obraPersonal;
             row.children[4].querySelector('input').value = total.toFixed(2);
             return total.toFixed(2);
         }
-
-        // Función para eliminar un pago
-        async function eliminarPago(mes, nombre) {
-            try {
-                const response = await fetch(apiUrl, {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ mes, nombre })
-                });
-                if (!response.ok) throw new Error('Error al eliminar pago: ' + response.statusText);
-                alert('Pago eliminado correctamente');
-                location.reload();
-            } catch (error) {
-                console.error('Error al eliminar el pago:', error);
-                alert('Error al eliminar el pago. Por favor, intenta nuevamente.');
-            }
-        }
-
-        // Cargar datos al cargar la página
-        crearTablasMeses();
-        cargarDatos();
 
         // Función para exportar la tabla a PDF
         document.getElementById('exportPDF').addEventListener('click', function () {
             const element = document.querySelector('.container');
             html2pdf().from(element).save('Control_de_Tesoreria_2024-2025.pdf');
         });
+
+        // Función para realizar los cálculos de la calculadora
+        function calculate() {
+            const num1 = parseFloat(document.getElementById('num1').value);
+            const num2 = parseFloat(document.getElementById('num2').value);
+            const operation = document.getElementById('operation').value;
+            let result;
+
+            if (isNaN(num1) || isNaN(num2)) {
+                alert('Por favor, ingrese números válidos.');
+                return;
+            }
+
+            switch (operation) {
+                case 'add':
+                    result = num1 + num2;
+                    break;
+                case 'subtract':
+                    result = num1 - num2;
+                    break;
+                case 'multiply':
+                    result = num1 * num2;
+                    break;
+                case 'divide':
+                    if (num2 === 0) {
+                        alert('No se puede dividir por cero.');
+                        return;
+                    }
+                    result = num1 / num2;
+                    break;
+                default:
+                    alert('Operación no válida.');
+                    return;
+            }
+
+            document.getElementById('resultado').innerText = result;
+        }
+
+        // Cargar datos al cargar la página
+        crearTablasMeses();
     </script>
 </body>
 
 </html>
+
 
