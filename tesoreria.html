@@ -115,25 +115,25 @@
             });
         }
 
-        // Función para generar filas con nombres y campos de pago para cada mes
         function generarFilas(mes) {
-            const tbody = document.getElementById(`tbody-${mes}`);
-            nombres.forEach(nombre => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${nombre}</td>
-                    <td><input type="text" class="form-control" oninput="calcularTotal(this)"></td>
-                    <td><input type="text" class="form-control" oninput="calcularTotal(this)"></td>
-                    <td><input type="text" class="form-control" oninput="calcularTotal(this)"></td>
-                    <td><input type="text" class="form-control" readonly></td>
-                    <td>
-                        <button class="btn btn-success" onclick="guardarPago(this, '${mes}', '${nombre}')">Guardar</button>
-                        <button class="btn btn-danger" onclick="eliminarPago('${mes}', '${nombre}')">Eliminar</button>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-        }
+    const tbody = document.getElementById(`tbody-${mes}`);
+    nombres.forEach(nombre => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${nombre}</td>
+            <td><input type="text" class="form-control" oninput="calcularTotal(this)"></td>
+            <td><input type="text" class="form-control" oninput="calcularTotal(this)"></td>
+            <td><input type="text" class="form-control" oninput="calcularTotal(this)"></td>
+            <td><input type="text" class="form-control" readonly></td>
+            <td class="d-flex justify-content-between"> <!-- Añadido para alinear horizontalmente -->
+                <button class="btn btn-success me-1" onclick="guardarPago(this, '${mes}', '${nombre}')">Guardar</button>
+                <button class="btn btn-danger ms-1" onclick="eliminarPago('${mes}', '${nombre}')">Eliminar</button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
 
         // Función para cargar los datos guardados desde el servidor
         async function cargarDatos() {
