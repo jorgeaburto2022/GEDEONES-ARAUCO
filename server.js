@@ -17,9 +17,9 @@ app.use(bodyParser.json());
 
 // Configuración de Sequelize para PostgreSQL usando tus credenciales
 const sequelize = new Sequelize('tesoreria', 'miusuario', '1234', {
-    host: 'localhost', // Cambia a la URL de tu servidor PostgreSQL si no es local
+    host: 'localhost',
     dialect: 'postgres',
-    port: 5432, // Puerto por defecto de PostgreSQL, ajusta si es diferente
+    port: 5432,
     dialectOptions: {
         ssl: process.env.NODE_ENV === 'production' ? {
             require: true,
@@ -71,6 +71,21 @@ const Pago = sequelize.define('Pago', {
     total: {
         type: DataTypes.FLOAT,
         allowNull: false,
+    },
+});
+
+const Informe = sequelize.define('Informe', {
+    mes: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    },
+    informe: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+    },
+    fecha: {
+        type: DataTypes.DATE,
+        defaultValue: Sequelize.NOW,
     },
 });
 
@@ -143,6 +158,18 @@ app.delete('/api/pagos', async (req, res) => {
     } catch (error) {
         console.error('Error al eliminar el pago:', error.message);
         res.status(500).json({ message: 'Error al eliminar el pago: ' + error.message });
+    }
+});
+
+// Ruta para guardar un informe de secretariado
+app.post('/api/informes', async (req, res) => {
+    const { mes, informe } = req.body;
+    try {
+        const nuevoInforme = await Informe.create({ mes, informe });
+        res.status(201).json({ message: 'Informe guardado correctamente', informe: nuevoInforme });
+    } catch (error) {
+        console.error('Error al guardar el informe:', error.message);
+        res.status(400).json({ message: 'Error al guardar el informe: ' + error.message });
     }
 });
 
